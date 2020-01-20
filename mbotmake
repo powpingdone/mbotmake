@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+import zipfile
+import json
+import sys
+import re
+import tempfile
+
+
+def generateMetajson(filename, temp):
+    return
+
+
+def createToolpath(filename, temp):
+    return
+
+
+def genDummyImages(temp):
+    return
+
+
+def packageMBotFile(filename, temp):
+    return
+
+
+def main(argv):
+    for gcode in argv[1:]:
+        temp = tempfile.mkdtemp()
+        output = gcode.replace('.gcode', '.makerbot')
+        print('Generating metadata for', output)
+        generateMetajson(gcode, temp)
+        print('Generating toolpath for', output)
+        createToolpath(gcode, temp)
+        print('Putting dummy images in', output)
+        genDummyImages(temp)
+        print('Packaging', output)
+        packageMBotFile(gcode, temp)
+        print(output, 'done!')
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print(
+"""Instructions:
+Drag and drop your generated gcode
+    file onto this executable.
+It will then output a makerbot file in
+    the dir that this tool is placed in.
+Press enter to continue."""
+        )
+        input()
+        sys.exit()
+    main(sys.argv)
