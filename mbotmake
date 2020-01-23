@@ -12,6 +12,11 @@ def generateMetajson(filename, temp):
 
 
 def createToolpath(filename, temp):
+    corpus = open(filename).readlines()
+    processed = []
+    for line in corpus:    #print path, temp,   absolute positioning
+        if line.startswith(('G0', 'G1', 'M104', 'M89')):
+            print(line)
     return
 
 
