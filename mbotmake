@@ -14,9 +14,47 @@ def generateMetajson(filename, temp):
 def createToolpath(filename, temp):
     corpus = open(filename).readlines()
     processed = []
-    for line in corpus:    #print path, temp,   absolute positioning
-        if line.startswith(('G0', 'G1', 'M104', 'M89')):
-            print(line)
+    progresslen = len(corpus)
+    linenum = 0
+    printline = '{0:>' + str(len(str(progresslen))) + '}/{1} {2:>3.0f}%'
+    axis = {
+            'a' : 0.0,
+            'feedrate' : 0.0,
+            'x' : 0.0,
+            'y' : 0.0,
+            'z' : 0.0
+            }
+    print('lines processed:')
+    print(printline.format(0, progresslen, 0/progresslen), end='')
+    """
+    Quick reference:
+    G0/G1 is move
+    M104 is set_toolhead_temperature
+    G90 toggles absolute positioning
+    G91 toggles relative positioning
+    """
+    for line in corpus:
+        if line.find(';') > 0:
+            line = line[:line.find(';')]
+        line = line.split(' ')
+        if line[0] in ['G0', 'G1']:
+            if len(line) == 2: # Most likely to set feedrate
+                axis['feedrate'] = float(line[1][1:])
+            else: # Normal move
+                for ax in line[1:]:
+                    if ax[0] == 'E':
+                        axis['a'] = float(ax[1:])
+                    elif ax[0] == 'X':
+                        axis['x'] = float(ax[1:])
+                    elif ax[0] == 'Y':
+                        axis['y'] = float(ax[1:])
+                    elif ax[0] == 'Z':
+                        axis['z'] = float(ax[1:])
+                    elif ax[0] == 'F':
+                        axis['feedrate'] = float(ax[1:])
+        print(''.join(['\b'] * len(printline)))
+        print(printline.format(linenum, progresslen, linenum/progresslen), end='')
+        
     return
 
 
@@ -50,7 +88,8 @@ if __name__ == '__main__':
 Drag and drop your generated gcode
     file onto this executable.
 It will then output a makerbot file in
-    the dir that this tool is placed in.
+    the dir that the original
+    gcode is placed in.
 Press enter to continue."""
         )
         input()
