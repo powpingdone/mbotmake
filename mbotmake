@@ -17,26 +17,35 @@ def createToolpath(filename, temp):
     progresslen = len(corpus)
     linenum = 0
     printline = '{0:>' + str(len(str(progresslen))) + '}/{1} {2:>3.0f}%'
-    axis = {
-            'a' : 0.0,
-            'feedrate' : 0.0,
-            'x' : 0.0,
-            'y' : 0.0,
-            'z' : 0.0
-            }
+    axis = \
+        {
+            'a': 0.0,
+            'feedrate': 0.0,
+            'x': 0.0,
+            'y': 0.0,
+            'z': 0.0
+        }
+    tempmetadata = \
+        {
+            'index': 0,
+            'temperature': 0
+        }
     print('lines processed:')
     print(printline.format(0, progresslen, 0/progresslen), end='')
     """
     Quick reference:
     G0/G1 is move
     M104 is set_toolhead_temperature
+    M140 sets bed temp (TODO: find makerbot equiv command) 
+    M106 is fan_duty (sets fan)
+    M107 is toggle_fan (off)
     G90 toggles absolute positioning
     G91 toggles relative positioning
     """
     for line in corpus:
         if line.find(';') > 0:
             line = line[:line.find(';')]
-        line = line.split(' ')
+        line = [part for part in line.split(' ') if part != '']
         if line[0] in ['G0', 'G1']:
             if len(line) == 2: # Most likely to set feedrate
                 axis['feedrate'] = float(line[1][1:])
@@ -52,7 +61,37 @@ def createToolpath(filename, temp):
                         axis['z'] = float(ax[1:])
                     elif ax[0] == 'F':
                         axis['feedrate'] = float(ax[1:])
-        print(''.join(['\b'] * len(printline)))
+                processed += \
+                    {'command': {
+                        'function': 'move',
+                        'metadata': {
+                            'relative': {
+                                'a': False,
+                                'x': False,
+                                'y': False,
+                                'z': False
+                            }
+                        },
+                        'parameters': axis,
+                        'tags': []
+                        }
+                    }
+        elif line[0] == 'M104':
+            for ax in line:
+                if ax[0] == 'T':
+                    tempmetadata['index'] = int(ax[1:])
+                elif ax[0] == 'S':
+                    tempmetadata['temperature'] = int(ax[1:])
+            processed += \
+                {'command': {
+                    'function': 'set_toolhead_temperature',
+                    'metadata': {},
+                    'parameters': tempmetadata,
+                    'tags':[]
+                    }
+                }
+        print(''.join(['\b'] * len(printline.format(linenum, progresslen, linenum/progresslen))), end='')
+        linenum += 1
         print(printline.format(linenum, progresslen, linenum/progresslen), end='')
         
     return
