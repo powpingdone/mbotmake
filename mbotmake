@@ -36,20 +36,20 @@ def createToolpath(filename, temp):
     Quick reference:
     G0/G1 is move
     M104 is set_toolhead_temperature
-    M140 sets bed temp (TODO: find makerbot equiv command) 
+    M140 sets bed temp (TODO: find makerbot equiv command)
     M106 is fan_duty (sets fan)
     M107 is toggle_fan (off)
     G90 toggles absolute positioning
     G91 toggles relative positioning
     """
     for line in corpus:
-        if line.find(';') > 0:
+        if line.find(';') > -1:
             line = line[:line.find(';')]
         line = [part for part in line.split(' ') if part != '']
         if line[0] in ['G0', 'G1']:
-            if len(line) == 2: # Most likely to set feedrate
+            if len(line) == 2:  # Most likely to set feedrate
                 axis['feedrate'] = float(line[1][1:])
-            else: # Normal move
+            else:  # Normal move
                 for ax in line[1:]:
                     if ax[0] == 'E':
                         axis['a'] = float(ax[1:])
@@ -87,13 +87,12 @@ def createToolpath(filename, temp):
                     'function': 'set_toolhead_temperature',
                     'metadata': {},
                     'parameters': tempmetadata,
-                    'tags':[]
+                    'tags': []
                     }
                 }
         print(''.join(['\b'] * len(printline.format(linenum, progresslen, linenum/progresslen))), end='')
         linenum += 1
         print(printline.format(linenum, progresslen, linenum/progresslen), end='')
-        
     return
 
 
