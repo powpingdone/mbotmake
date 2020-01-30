@@ -11,6 +11,16 @@ def generateMetajson(filename, temp):
     return
 
 
+def generateCommand(function, metadata, parameters, tags):
+    return {'command': {
+                'function': function,
+                'metadata': metadata,
+                'parameters': parameters,
+                'tags': []
+                }
+            } 
+
+
 def createToolpath(filename, temp):
     corpus = open(filename).readlines()
     processed = []
@@ -71,35 +81,20 @@ def createToolpath(filename, temp):
                         axis['z'] = float(ax[1:])
                     elif ax[0] == 'F':
                         axis['feedrate'] = float(ax[1:])
-                processed += \
-                    {'command': {
-                        'function': 'move',
-                        'metadata': {
-                            'relative': {
-                                'a': False,
-                                'x': False,
-                                'y': False,
-                                'z': False
-                            }
-                        },
-                        'parameters': axis,
-                        'tags': []
-                        }
-                    }
+                processed += generateCommand('move',
+                                             {'a': False, 'x': False, 'y': False, 'z': False},
+                                             axis,
+                                             [])
         elif line[0] == 'M104':
             for ax in line[1:]:
                 if ax[0] == 'T':
                     tempmetadata['index'] = int(ax[1:])
                 elif ax[0] == 'S':
                     tempmetadata['temperature'] = int(ax[1:])
-            processed += \
-                {'command': {
-                    'function': 'set_toolhead_temperature',
-                    'metadata': {},
-                    'parameters': tempmetadata,
-                    'tags': []
-                    }
-                }
+            processed += generateCommand('set_toolhead_temperature',
+                                         {},
+                                         tempmetadata,
+                                         [])
         elif line[0] == 'M106':
             for ax in line[1:]:
                 if ax[0] == 'P':
@@ -109,22 +104,20 @@ def createToolpath(filename, temp):
                     fanduty['value'] = float(ax[1:]) / 255
             if not fanstatus['value']:
                 fanstatus['value'] = True
-                processed += \
-                    {'command': {
-                        'function': 'toggle_fan',
-                        'metadata': {},
-                        'parameters': fanstatus,
-                        'tags':  []
-                        }
-                    }
-            processed += \
-                {'command': {
-                    'function': 'fan_duty',
-                    'metadata': {},
-                    'parameters': fanduty,
-                    'tags':  []
-                    }
-                }
+                processed += generateCommand('toggle_fan',
+                                             {},
+                                             fanstatus,
+                                             [])
+            processed += generateCommand('fan_duty',
+                                         {},
+                                         fanduty,
+                                         [])
+        elif line[0] == 'M107':
+            fanstatus['value'] = False
+            processed += generateCommand('toggle_fan',
+                                         {},
+                                         fanstatus,
+                                         [])
         print(''.join(['\b'] * len(printline.format(linenum, progresslen, linenum/progresslen))), end='')
         linenum += 1
         print(printline.format(linenum, progresslen, linenum/progresslen), end='')
