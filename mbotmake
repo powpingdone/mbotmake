@@ -30,6 +30,16 @@ def createToolpath(filename, temp):
             'index': 0,
             'temperature': 0
         }
+    fanstatus = \
+        {
+            'index': 0,
+            'value': False
+        }
+    fanduty = \
+        {
+            'index': 0,
+            'value': 0.0
+        }
     print('lines processed:')
     print(printline.format(0, progresslen, 0/progresslen), end='')
     """
@@ -77,7 +87,7 @@ def createToolpath(filename, temp):
                         }
                     }
         elif line[0] == 'M104':
-            for ax in line:
+            for ax in line[1:]:
                 if ax[0] == 'T':
                     tempmetadata['index'] = int(ax[1:])
                 elif ax[0] == 'S':
@@ -88,6 +98,31 @@ def createToolpath(filename, temp):
                     'metadata': {},
                     'parameters': tempmetadata,
                     'tags': []
+                    }
+                }
+        elif line[0] == 'M106':
+            for ax in line[1:]:
+                if ax[0] == 'P':
+                    fanduty['index'] = int(ax[1:])
+                    fanstatus['index'] = int(ax[1:])
+                elif ax[0] == 'S':
+                    fanduty['value'] = float(ax[1:]) / 255
+            if not fanstatus['value']:
+                fanstatus['value'] = True
+                processed += \
+                    {'command': {
+                        'function': 'toggle_fan',
+                        'metadata': {},
+                        'parameters': fanstatus,
+                        'tags':  []
+                        }
+                    }
+            processed += \
+                {'command': {
+                    'function': 'fan_duty',
+                    'metadata': {},
+                    'parameters': fanduty,
+                    'tags':  []
                     }
                 }
         print(''.join(['\b'] * len(printline.format(linenum, progresslen, linenum/progresslen))), end='')
