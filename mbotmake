@@ -3,8 +3,8 @@
 import zipfile
 import json
 import sys
-import re
 import tempfile
+import copy
 
 
 def generateMetajson(filename, temp):
@@ -12,13 +12,15 @@ def generateMetajson(filename, temp):
 
 
 def generateCommand(function, metadata, parameters, tags):
-    return {'command': {
-                'function': function,
-                'metadata': metadata,
-                'parameters': parameters,
-                'tags': []
-                }
-            } 
+    return [
+        {'command': {
+            'function': copy.deepcopy(function),
+            'metadata': copy.deepcopy(metadata),
+            'parameters': copy.deepcopy(parameters),
+            'tags': copy.deepcopy([])
+            }
+        }
+    ]
 
 
 def createToolpath(filename, temp):
@@ -66,6 +68,15 @@ def createToolpath(filename, temp):
         if line.find(';') > -1:
             line = line[:line.find(';')]
         line = [part for part in line.split(' ') if part != '']
+        if len(line) == 0:  # Most likely a blank line
+            print(''.join(['\b'] * len(
+                printline.format(linenum,
+                                 progresslen,
+                                 linenum/progresslen * 100.0))), end='')
+            linenum += 1
+            print(printline.format(
+                linenum, progresslen, linenum/progresslen * 100.0), end='')
+            continue
         if line[0] in ['G0', 'G1']:
             if len(line) == 2:  # Most likely to set feedrate
                 axis['feedrate'] = float(line[1][1:])
@@ -82,7 +93,10 @@ def createToolpath(filename, temp):
                     elif ax[0] == 'F':
                         axis['feedrate'] = float(ax[1:])
                 processed += generateCommand('move',
-                                             {'a': False, 'x': False, 'y': False, 'z': False},
+                                             {'a': False,
+                                              'x': False,
+                                              'y': False,
+                                              'z': False},
                                              axis,
                                              [])
         elif line[0] == 'M104':
@@ -118,9 +132,17 @@ def createToolpath(filename, temp):
                                          {},
                                          fanstatus,
                                          [])
-        print(''.join(['\b'] * len(printline.format(linenum, progresslen, linenum/progresslen))), end='')
+        print(''.join(['\b'] * len(
+            printline.format(linenum,
+                             progresslen,
+                             linenum/progresslen * 100.0))), end='')
         linenum += 1
-        print(printline.format(linenum, progresslen, linenum/progresslen), end='')
+        print(printline.format(
+            linenum, progresslen, linenum/progresslen * 100.0), end='')
+    print()  # flush all the crap
+    print('writing', progresslen, 'toolpath lines')
+    with open('{}/print.jsontoolpath'.format(temp), 'w') as toolpathfile:
+        toolpathfile.write(json.dumps(processed, sort_keys=False))
     return
 
 
@@ -135,6 +157,7 @@ def packageMBotFile(filename, temp):
 def main(argv):
     for gcode in argv[1:]:
         temp = tempfile.mkdtemp()
+        print(temp)
         output = gcode.replace('.gcode', '.makerbot')
         print('Generating metadata for', output)
         generateMetajson(gcode, temp)
