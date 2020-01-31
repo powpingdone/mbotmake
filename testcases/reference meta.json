@@ -1,0 +1,13 @@
+{
+    "toolhead_0_temperature": 215, 
+    "toolhead_1_temperature": 230, 
+    "printer_settings": {
+        "platform_temperature": 110, 
+        "extruder_temperatures": [
+            215, 
+            230
+        ],
+        "heat_platform": false, 
+        "extruder": "0"
+    }
+}
