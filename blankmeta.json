@@ -1,0 +1,13 @@
+{
+    "toolhead_0_temperature": {0}, 
+    "toolhead_1_temperature": {1}, 
+    "printer_settings": {
+        "platform_temperature": {2}, 
+        "extruder_temperatures": [
+            {0}, 
+            {1}
+        ],
+        "heat_platform": {3}, 
+        "extruder": "0"
+    }
+}
