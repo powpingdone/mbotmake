@@ -7,20 +7,39 @@ import tempfile
 import copy
 
 
-def generateMetajson(filename, temp):
-    return
+def generateMetajson(temp, vardict):
+    meta = """
+{{
+    "toolhead_0_temperature": {0},
+    "toolhead_1_temperature": {1},
+    "printer_settings": {{
+        "platform_temperature": {2},
+        "extruder_temperatures": [
+            {0},
+            {1}
+        ],
+        "heat_platform": {3},
+        "extruder": "0"
+    }}
+}}
+    """
+    meta = meta.format(vardict['tool0temp'], vardict['tool1temp'],
+                       vardict['bedtemp'], vardict['heatbed'])
+    with open('{}/meta.json'.format(temp), 'w') as metafile:
+        metafile.write(meta)
+    return 
 
 
 def generateCommand(function, metadata, parameters, tags):
-    return [
+    return copy.deepcopy([
         {'command': {
-            'function': copy.deepcopy(function),
-            'metadata': copy.deepcopy(metadata),
-            'parameters': copy.deepcopy(parameters),
-            'tags': copy.deepcopy([])
+            'function': function,
+            'metadata': metadata,
+            'parameters': parameters,
+            'tags': tags
             }
         }
-    ]
+    ])
 
 
 def createToolpath(filename, temp):
@@ -52,13 +71,20 @@ def createToolpath(filename, temp):
             'index': 0,
             'value': 0.0
         }
+    printersettings = \
+        {
+            'tool0temp': 0,
+            'tool1temp': 0,
+            'bedtemp': 0,
+            'heatbed': False
+        }
     print('lines processed:')
     print(printline.format(0, progresslen, 0/progresslen), end='')
     """
     Quick reference:
     G0/G1 is move
     M104 is set_toolhead_temperature
-    M140 sets bed temp (TODO: find makerbot equiv command)
+    M140 sets bed temp 
     M106 is fan_duty (sets fan)
     M107 is toggle_fan (off)
     G90 toggles absolute positioning
@@ -109,6 +135,8 @@ def createToolpath(filename, temp):
                                          {},
                                          tempmetadata,
                                          [])
+            if printersettings['tool{}temp'.format(tempmetadata['index'])] == 0:
+                printersettings['tool{}temp'.format(tempmetadata['index'])] = tempmetadata['temperature']
         elif line[0] == 'M106':
             for ax in line[1:]:
                 if ax[0] == 'P':
@@ -132,25 +160,24 @@ def createToolpath(filename, temp):
                                          {},
                                          fanstatus,
                                          [])
+        elif line[0] == 'M140':
+            printersettings['bedtemp'] = int(line[1][1:])
+            printersettings['heatbed'] = True
         print(''.join(['\b'] * len(
-            printline.format(linenum,
-                             progresslen,
-                             linenum/progresslen * 100.0))), end='')
+            printline.format(linenum, progresslen, linenum/progresslen * 100.0))), end='')
         linenum += 1
-        print(printline.format(
-            linenum, progresslen, linenum/progresslen * 100.0), end='')
+        print(printline.format(linenum, progresslen, linenum/progresslen * 100.0), end='')
     print()  # flush all the crap
     print('writing', progresslen, 'toolpath lines')
     with open('{}/print.jsontoolpath'.format(temp), 'w') as toolpathfile:
         toolpathfile.write(json.dumps(processed, sort_keys=False))
-    return
-
-
-def genDummyImages(temp):
-    return
+    return printersettings
 
 
 def packageMBotFile(filename, temp):
+    with zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED) as mbotfile:
+        mbotfile.write('{}/meta.json'.format(temp))
+        mbotfile.write('{}/print.jsontoolpath'.format(temp))
     return
 
 
@@ -159,14 +186,12 @@ def main(argv):
         temp = tempfile.mkdtemp()
         print(temp)
         output = gcode.replace('.gcode', '.makerbot')
-        print('Generating metadata for', output)
-        generateMetajson(gcode, temp)
         print('Generating toolpath for', output)
-        createToolpath(gcode, temp)
-        print('Putting dummy images in', output)
-        genDummyImages(temp)
+        vardict = createToolpath(gcode, temp)
+        print('Generating metadata for', output)
+        generateMetajson(temp, vardict)
         print('Packaging', output)
-        packageMBotFile(gcode, temp)
+        packageMBotFile(output, temp)
         print(output, 'done!')
 
 
