@@ -59,7 +59,7 @@ def createToolpath(filename, temp):
         }
     tempmetadata = \
         {
-            'index': 0,
+            'index': -1,
             'temperature': 0
         }
     fanstatus = \
@@ -132,12 +132,19 @@ def createToolpath(filename, temp):
                     tempmetadata['index'] = int(ax[1:])
                 elif ax[0] == 'S':
                     tempmetadata['temperature'] = int(ax[1:])
-            processed += generateCommand('set_toolhead_temperature',
-                                         {},
-                                         tempmetadata,
-                                         [])
-            if printersettings['tool{}temp'.format(tempmetadata['index'])] == 0:
-                printersettings['tool{}temp'.format(tempmetadata['index'])] = tempmetadata['temperature']
+            if tempmetadata['index'] != -1:
+                processed += generateCommand('set_toolhead_temperature',
+                                             {},
+                                             tempmetadata,
+                                             [])
+                if printersettings['tool{}temp'.format(tempmetadata['index'])] == 0:
+                    printersettings['tool{}temp'.format(tempmetadata['index'])] = tempmetadata['temperature']
+            else: # there is only one extruder
+                processed += generateCommand('set_toolhead_temperature',
+                                             {},
+                                             {'temperature': tempmetadata['temperature']},
+                                             [])
+                printersettings['tool0temp'] = tempmetadata['temperature']
         elif line[0] == 'M106':
             for ax in line[1:]:
                 if ax[0] == 'P':
