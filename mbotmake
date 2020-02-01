@@ -35,8 +35,8 @@ def generateCommand(function, metadata, parameters, tags):
     return copy.deepcopy([
         {'command': {
             'function': function,
-            'metadata': metadata,
             'parameters': parameters,
+            'metadata': metadata,
             'tags': tags
             }
         }
