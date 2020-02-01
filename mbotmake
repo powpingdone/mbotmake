@@ -24,7 +24,8 @@ def generateMetajson(temp, vardict):
 }}
     """
     meta = meta.format(vardict['tool0temp'], vardict['tool1temp'],
-                       vardict['bedtemp'], vardict['heatbed'])
+                       vardict['bedtemp'],
+                       'true' if vardict['heatbed'] else 'false')
     with open('{}/meta.json'.format(temp), 'w') as metafile:
         metafile.write(meta)
     return 
@@ -176,8 +177,8 @@ def createToolpath(filename, temp):
 
 def packageMBotFile(filename, temp):
     with zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED) as mbotfile:
-        mbotfile.write('{}/meta.json'.format(temp))
-        mbotfile.write('{}/print.jsontoolpath'.format(temp))
+        mbotfile.write('{}/meta.json'.format(temp), arcname='meta.json')
+        mbotfile.write('{}/print.jsontoolpath'.format(temp), arcname='print.jsontoolpath')
     return
 
 
