@@ -105,7 +105,7 @@ def createToolpath(filename, temp):
                 linenum, progresslen, linenum/progresslen * 100.0), end='')
             continue
         if line[0] in ['G0', 'G1']:
-            if len(line) == 2:  # Most likely to set feedrate
+            if len(line) == 2 and line[1][0] == 'F':
                 axis['feedrate'] = float(line[1][1:])
             else:  # Normal move
                 for ax in line[1:]:
