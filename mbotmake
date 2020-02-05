@@ -106,7 +106,7 @@ def createToolpath(filename, temp):
             continue
         if line[0] in ['G0', 'G1']:
             if len(line) == 2 and line[1][0] == 'F':
-                axis['feedrate'] = float(line[1][1:])
+                axis['feedrate'] = float(line[1][1:]) / 60.0
             else:  # Normal move
                 for ax in line[1:]:
                     if ax[0] == 'E':
@@ -118,7 +118,7 @@ def createToolpath(filename, temp):
                     elif ax[0] == 'Z':
                         axis['z'] = float(ax[1:])
                     elif ax[0] == 'F':
-                        axis['feedrate'] = float(ax[1:])
+                        axis['feedrate'] = float(ax[1:]) / 60.0
                 processed += generateCommand('move',
                                              {'a': False,
                                               'x': False,
