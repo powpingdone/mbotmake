@@ -138,10 +138,15 @@ def createToolpath(filename, temp):
                                               'z': False},
                                              axis,
                                              [])
-                # get time traveled by the equasion
-                # time = sqrt((x2-x1)^2 + (y2-y1)^2 + (z2-z1)^2)/feedrate
-                distance = math.dist([axis['x'], axis['y'], axis['z']],
-                                     [prev['x'], prev['y'], prev['z']])
+                if [axis['x'], axis['y'], axis['z']] == [prev['x'], prev['y'], prev['z']] and axis['a'] != prev['a']:
+                    # retraction takes time as well, add it in
+                    # time = sqrt((e2-e1)^2)/feedrate
+                    distance = math.dist([axis['a']], [prev['a']])
+                else:
+                    # get time traveled by the equasion
+                    # time = sqrt((x2-x1)^2 + (y2-y1)^2 + (z2-z1)^2)/feedrate
+                    distance = math.dist([axis['x'], axis['y'], axis['z']],
+                                        [prev['x'], prev['y'], prev['z']])
                 printersettings['time'] += distance/axis['feedrate']
         elif line[0] == 'G92':
             for ax in line[1:]:
@@ -217,18 +222,23 @@ def packageMBotFile(filename, temp):
 
 
 def main(argv):
-    for gcode in argv[1:]:
-        temp = tempfile.mkdtemp()
-        print(temp)
-        output = gcode.replace('.gcode', '.makerbot')
-        print('Generating toolpath for', output)
-        vardict = createToolpath(gcode, temp)
-        print('Generating metadata for', output)
-        generateMetajson(temp, vardict)
-        print('Packaging', output)
-        packageMBotFile(output, temp)
-        print(output, 'done!')
-
+    try:
+        for gcode in argv[1:]:
+            temp = tempfile.mkdtemp()
+            print(temp)
+            output = gcode.replace('.gcode', '.makerbot')
+            print('Generating toolpath for', output)
+            vardict = createToolpath(gcode, temp)
+            print('Generating metadata for', output)
+            generateMetajson(temp, vardict)
+            print('Packaging', output)
+            packageMBotFile(output, temp)
+            print(output, 'done!')
+    except Exception as e:
+        print('ERROR:', e)
+        print('Please report this, as this may be a bug.')
+        print('Go to https://github.com/sckunkle/mbotmake/issues and add a new issue.')
+        
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
