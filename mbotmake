@@ -83,6 +83,13 @@ def createToolpath(filename, temp):
             'heatbed': False,
             'time': 0.0
         }
+    printeroffset = \
+        {
+            'a': 0.0,
+            'x': 0.0,
+            'y': 0.0,
+            'z': 0.0
+        }
     print('lines processed:')
     print(printline.format(0, progresslen, 0/progresslen), end='')
     """
@@ -115,13 +122,13 @@ def createToolpath(filename, temp):
                 prev = copy.copy(axis)  # copy previous pos for timing
                 for ax in line[1:]:
                     if ax[0] == 'E':
-                        axis['a'] = float(ax[1:])
+                        axis['a'] = printeroffset['a'] + float(ax[1:])
                     elif ax[0] == 'X':
-                        axis['x'] = float(ax[1:])
+                        axis['x'] = printeroffset['x'] + float(ax[1:])
                     elif ax[0] == 'Y':
-                        axis['y'] = float(ax[1:])
+                        axis['y'] = printeroffset['y'] + float(ax[1:])
                     elif ax[0] == 'Z':
-                        axis['z'] = float(ax[1:])
+                        axis['z'] = printeroffset['z'] + float(ax[1:])
                     elif ax[0] == 'F':
                         axis['feedrate'] = float(ax[1:]) / 60.0
                 processed += generateCommand('move',
@@ -136,6 +143,16 @@ def createToolpath(filename, temp):
                 distance = math.dist([axis['x'], axis['y'], axis['z']],
                                      [prev['x'], prev['y'], prev['z']])
                 printersettings['time'] += distance/axis['feedrate']
+        elif line[0] == 'G92':
+            for ax in line[1:]:
+                if ax[0] == 'E':
+                    printeroffset['a'] += axis['a'] + float(ax[1:])
+                elif ax[0] == 'X':
+                    printeroffset['x'] += axis['x'] + float(ax[1:])
+                elif ax[0] == 'Y':
+                    printeroffset['y'] += axis['y'] + float(ax[1:])
+                elif ax[0] == 'Z':
+                    printeroffset['z'] += axis['z'] + float(ax[1:])
         elif line[0] == 'M104':
             for ax in line[1:]:
                 if ax[0] == 'T':
