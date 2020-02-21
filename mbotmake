@@ -217,7 +217,7 @@ def createToolpath(filename, temp):
     print()  # flush all the crap
     print('writing', printersettings['commands'], 'toolpath lines')
     with open('{}/print.jsontoolpath'.format(temp), 'w') as toolpathfile:
-        toolpathfile.write(json.dumps(processed, sort_keys=False))
+        toolpathfile.write(json.dumps(processed, sort_keys=False, indent=4))
     return printersettings
 
 
