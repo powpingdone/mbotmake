@@ -50,6 +50,18 @@ def generateCommand(function, metadata, parameters, tags):
     ])
 
 
+def computeTime(prev, current):
+    if [current['x'], current['y'], current['z']] == [prev['x'], prev['y'], prev['z']] and current['a'] != prev['a']:
+        # retraction takes time as well, add it in
+        # time = sqrt((e2-e1)^2)/feedrate
+        distance = math.dist([current['a']], [prev['a']])
+    else:
+        # get time traveled by the equasion
+        # time = sqrt((x2-x1)^2 + (y2-y1)^2 + (z2-z1)^2)/feedrate
+        distance = math.dist([current['x'], current['y'], current['z']],
+                             [prev['x'], prev['y'], prev['z']])
+    return distance/current['feedrate']
+
 def createToolpath(filename, temp):
     corpus = open(filename).readlines()
     processed = []
@@ -96,7 +108,7 @@ def createToolpath(filename, temp):
             'z': 0.0
         }
     print('lines processed:')
-    print(printline.format(0, progresslen, 0/progresslen), end='')
+    print(printline.format(0, progresslen, 0.0), end='')
     """
     Quick reference:
     G0/G1 is move
@@ -144,16 +156,7 @@ def createToolpath(filename, temp):
                                               'z': False},
                                              axis,
                                              [])
-                if [axis['x'], axis['y'], axis['z']] == [prev['x'], prev['y'], prev['z']] and axis['a'] != prev['a']:
-                    # retraction takes time as well, add it in
-                    # time = sqrt((e2-e1)^2)/feedrate
-                    distance = math.dist([axis['a']], [prev['a']])
-                else:
-                    # get time traveled by the equasion
-                    # time = sqrt((x2-x1)^2 + (y2-y1)^2 + (z2-z1)^2)/feedrate
-                    distance = math.dist([axis['x'], axis['y'], axis['z']],
-                                        [prev['x'], prev['y'], prev['z']])
-                printersettings['time'] += distance/axis['feedrate']
+                printersettings['time'] += computeTime(prev, axis)
         elif line[0] == 'G92':
             for ax in line[1:]:
                 if ax[0] == 'E':
@@ -253,15 +256,10 @@ def main(argv):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print(
-"""Instructions:
-Drag and drop your generated gcode
-    file onto this executable.
-It will then output a makerbot file in
-    the dir that the original
-    gcode is placed in.
-Press enter to continue."""
-        )
+        print('Instructions:')
+        print('Drag and drop your generated gcode file onto this executable.')
+        print('It will then output a makerbot file in the dir that the original gcode is placed in.')
+        print('Press enter to continue.')
         input()
         sys.exit()
     main(sys.argv)
