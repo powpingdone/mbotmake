@@ -7,6 +7,7 @@ import tempfile
 import copy
 import math
 import re
+import traceback
 
 
 def generateMetajson(temp, vardict):
@@ -232,7 +233,6 @@ def main(argv):
     try:
         for gcode in argv[1:]:
             temp = tempfile.mkdtemp()
-            print(temp)
             output = gcode.replace('.gcode', '.makerbot')
             print('Generating toolpath for', output)
             vardict = createToolpath(gcode, temp)
@@ -242,9 +242,12 @@ def main(argv):
             packageMBotFile(output, temp)
             print(output, 'done!')
     except Exception as e:
-        print('ERROR:', e)
+        print()
+        print('An error occurred.')
         print('Please report this, as this may be a bug.')
         print('Go to https://github.com/sckunkle/mbotmake/issues and add a new issue.')
+        print('Also, add the contents of {} to a zip file and add it to the issue, if there is any.'.format(temp))
+        traceback.print_exc()
         input()
         
 
