@@ -6,6 +6,7 @@ import sys
 import tempfile
 import copy
 import math
+import re
 
 
 def generateMetajson(temp, vardict):
@@ -30,7 +31,7 @@ def generateMetajson(temp, vardict):
                        vardict['bedtemp'],
                        'true' if vardict['heatbed'] else 'false',
                        int(math.ceil(vardict['time'])),
-                       vardict['commands'])
+                       vardict['toolpathfilelength'])
     with open('{}/meta.json'.format(temp), 'w') as metafile:
         metafile.write(meta)
     return 
@@ -84,7 +85,7 @@ def createToolpath(filename, temp):
             'bedtemp': 0,
             'heatbed': False,
             'time': 0.0,
-            'commands': 0
+            'toolpathfilelength': 0
         }
     printeroffset = \
         {
@@ -102,6 +103,7 @@ def createToolpath(filename, temp):
     M140 sets bed temp
     M106 is fan_duty (sets fan)
     M107 is toggle_fan (off)
+    M141 sets chamber temperature
     G90 toggles absolute positioning
     G91 toggles relative positioning
     """
@@ -151,7 +153,6 @@ def createToolpath(filename, temp):
                     distance = math.dist([axis['x'], axis['y'], axis['z']],
                                         [prev['x'], prev['y'], prev['z']])
                 printersettings['time'] += distance/axis['feedrate']
-                printersettings['commands'] += 1
         elif line[0] == 'G92':
             for ax in line[1:]:
                 if ax[0] == 'E':
@@ -181,7 +182,6 @@ def createToolpath(filename, temp):
                                              {'temperature': tempmetadata['temperature']},
                                              [])
                 printersettings['tool0temp'] = tempmetadata['temperature']
-            printersettings['commands'] += 1
         elif line[0] == 'M106':
             for ax in line[1:]:
                 if ax[0] == 'P':
@@ -199,14 +199,12 @@ def createToolpath(filename, temp):
                                          {},
                                          fanduty,
                                          [])
-            printersettings['commands'] += 1
         elif line[0] == 'M107':
             fanstatus['value'] = False
             processed += generateCommand('toggle_fan',
                                          {},
                                          fanstatus,
                                          [])
-            printersettings['commands'] += 1
         elif line[0] == 'M140':
             printersettings['bedtemp'] = int(line[1][1:])
             printersettings['heatbed'] = True
@@ -215,9 +213,11 @@ def createToolpath(filename, temp):
         linenum += 1
         print(printline.format(linenum, progresslen, linenum/progresslen * 100.0), end='')
     print()  # flush all the crap
-    print('writing', printersettings['commands'], 'toolpath lines')
+    print('writing toolpath')
+    compiledtoolpath = json.dumps(processed, sort_keys=False, indent=4)
     with open('{}/print.jsontoolpath'.format(temp), 'w') as toolpathfile:
-        toolpathfile.write(json.dumps(processed, sort_keys=False, indent=4))
+        toolpathfile.write(compiledtoolpath)
+    printersettings['toolpathfilelength'] = len(re.findall('\n',compiledtoolpath))
     return printersettings
 
 
