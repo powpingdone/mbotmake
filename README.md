@@ -12,9 +12,10 @@ Download the exe from [here](https://github.com/sckunkle/mbotmake/releases) and 
 
 # PLANNED FEATURES
 
-* Refactoring into a normal python module
-* Impliment the manual slowdown at the end of a toolpath to help prevent stringing(?), like Makerbot Print's
 * Create a Ultimaker Cura plugin
+* Add M600 (filament change) support
+* Refactor the script into readable code
+* Add working PursaSlicer config
 
 # REPORTING BUGS
 Please supply a copy of your printer config, the generated .makerbot file, the gcode from your slicer, the makerbot you're using, and a detailed description of the bug you're experiencing. 
