@@ -16,6 +16,7 @@ Download the exe from [here](https://github.com/sckunkle/mbotmake/releases) and 
 * Add M600 (filament change) support
 * Refactor the script into readable code
 * Add working PursaSlicer config
+* Add makerbot slice ending wipe
 
 # REPORTING BUGS
 Please supply a copy of your printer config, the generated .makerbot file, the gcode from your slicer, the makerbot you're using, and a detailed description of the bug you're experiencing. 
