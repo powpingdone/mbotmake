@@ -22,6 +22,6 @@ Download the exe from [here](https://github.com/sckunkle/mbotmake/releases) and 
 Please supply a copy of your printer config, the generated .makerbot file, the gcode from your slicer, the makerbot you're using, and a detailed description of the bug you're experiencing. 
 
 # CURRENTLY SUPPORTED PRINTERS
-If you have a makerbot that use .makerbot files that isn't in this list, contact me at ppdplayer@gmail.com so that I can test how to properly convert to the printer specifications. 
+If you have a makerbot that use .makerbot files that isn't in this list, contact me at aidanzcase@gmail.com so that I can test how to properly convert to the printer specifications. 
 
 * Makerbot Replicator Generation 5
