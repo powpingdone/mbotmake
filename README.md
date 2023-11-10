@@ -10,6 +10,9 @@ Install Python 3.8 by your preferred means, then run the mbotmake file in the ro
 ## Windows
 Download the exe from [here](https://github.com/sckunkle/mbotmake/releases) and drag and drop your gcode onto the executable.
 
+## G-Code Thumbnails (only PrusaSlicer)
+Add "55x40, 110x80, 320x200" to Printer Settings -> G-code thumbnails.
+
 # PLANNED FEATURES
 
 * Create a Ultimaker Cura plugin
