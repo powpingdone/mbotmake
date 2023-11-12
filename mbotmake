@@ -9,7 +9,7 @@ import math
 import re
 import traceback
 import base64
-
+from os import getenv
 
 def generateMetajson(temp, vardict):
     meta = """
@@ -265,9 +265,16 @@ def packageMBotFile(filename, temp, tnNames):
 
 def main(argv):
     try:
+        prusaScript = False         
         for gcode in argv[1:]:
             temp = tempfile.mkdtemp()
-            output = gcode.replace('.gcode', '.makerbot')
+            if "-prusa" in gcode:       # use "-prusa" as argument in PrusaSlicer Post-Processing-Script
+                prusaScript = True
+                continue
+            if prusaScript:
+                output  = str(getenv('SLIC3R_PP_OUTPUT_NAME')).replace('.gcode', '.makerbot')
+            else:
+                output = gcode.replace('.gcode', '.makerbot')
             print('Generating toolpath for', output)
             vardict = createToolpath(gcode, temp)
             print('Generating metadata for', output)
