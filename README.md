@@ -12,7 +12,7 @@ Download the exe from [here](https://github.com/sckunkle/mbotmake/releases) and 
 
 ## PrusaSlicer
 Change these two settings in PrusaSlicer:
-* Runs mbotmake automatically after exporting G-Code.<br><strong>[Print Settings] &rarr; [Output options] &rarr; [Post-processing scripts]:</strong><br>'[path to python] [.../]mbotmake.py -prusa'
+* Runs mbotmake automatically after exporting G-Code.<br><strong>[Print Settings] &rarr; [Output options] &rarr; [Post-processing scripts]:</strong><br>'[path to python] [.../]mbotmake -prusa'
 * Generates the thumbnails for the Makerbot Replicator Gen5 display.<br><strong>[Printer Settings] &rarr; [General] &rarr; [G-code thumbnails]:</strong><br>
 '55x40, 110x80, 320x200'
 
