@@ -8,7 +8,8 @@ import copy
 import math
 import re
 import traceback
-
+import base64
+from os import getenv
 
 def generateMetajson(temp, vardict):
     meta = """
@@ -48,6 +49,34 @@ def generateCommand(function, metadata, parameters, tags):
             }
         }
     ])
+
+
+def generateThumbnails(filename, temp):
+    tnNames = []
+    file = open(filename, 'r')
+    line = file.readline()
+    if "PrusaSlicer" not in line:  # only tested on Prusa Slicer
+        return tnNames;
+    while True: 
+        line = file.readline()
+        if "thumbnail begin" in line:
+            thumbnailMeta = line.split(' ')
+            thumbnailSize = thumbnailMeta[3]
+
+            line = file.readline()
+            thumbnail_data = ""
+            while "thumbnail end" not in line and line:
+                thumbnail_data = thumbnail_data + line.strip("; \n")
+                line = file.readline()
+            decoded_data = base64.b64decode(thumbnail_data)
+            thumbnailFileName = '{}/thumbnail_' + thumbnailSize  + '.png'
+            tnNames.append(thumbnailFileName)
+            with open(thumbnailFileName.format(temp), 'wb') as thumbnailFile:
+                thumbnailFile.write(decoded_data)
+        if not line:
+            break;
+    file.close();
+    return tnNames
 
 
 def computeTime(prev, current):
@@ -225,8 +254,10 @@ def createToolpath(filename, temp):
     return printersettings
 
 
-def packageMBotFile(filename, temp):
+def packageMBotFile(filename, temp, tnNames):
     with zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED) as mbotfile:
+        for tn in tnNames:
+            mbotfile.write(tn.format(temp), arcname=tn.strip("{}/"))
         mbotfile.write('{}/meta.json'.format(temp), arcname='meta.json')
         mbotfile.write('{}/print.jsontoolpath'.format(temp), arcname='print.jsontoolpath')
     return
@@ -234,15 +265,25 @@ def packageMBotFile(filename, temp):
 
 def main(argv):
     try:
+        prusaScript = False         
         for gcode in argv[1:]:
             temp = tempfile.mkdtemp()
-            output = gcode.replace('.gcode', '.makerbot')
+            if "-prusa" in gcode:       # use "-prusa" as argument in PrusaSlicer Post-Processing-Script
+                prusaScript = True
+                continue
+            if prusaScript:
+                output  = str(getenv('SLIC3R_PP_OUTPUT_NAME')).replace('.gcode', '.makerbot')
+            else:
+                output = gcode.replace('.gcode', '.makerbot')
             print('Generating toolpath for', output)
             vardict = createToolpath(gcode, temp)
             print('Generating metadata for', output)
             generateMetajson(temp, vardict)
+            print('Generating thumbnails for', output)
+            tnNames = generateThumbnails(gcode, temp)
+            print(len(tnNames), 'Thumbnail(s) generated')
             print('Packaging', output)
-            packageMBotFile(output, temp)
+            packageMBotFile(output, temp, tnNames)
             print(output, 'done!')
     except Exception as e:
         print()
